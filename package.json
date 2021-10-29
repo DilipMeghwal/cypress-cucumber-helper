@@ -1,0 +1,39 @@
+{
+  "name": "cypress-cucumber-helper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clean:reports": "if exist .\\reports rmdir /S/Q .\\reports",
+    "pretest": "npm run clean:reports",
+    "test": "cypress run --spec **/*.feature --browser chrome",
+    "posttest": "node cucumber-html-report.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DilipMeghwal/cypress-cucumber-helper.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DilipMeghwal/cypress-cucumber-helper/issues"
+  },
+  "homepage": "https://github.com/DilipMeghwal/cypress-cucumber-helper#readme",
+  "dependencies": {
+    "cypress": "^8.7.0"
+  },
+  "devDependencies": {
+    "cypress-cucumber-preprocessor": "^4.3.0",
+    "multiple-cucumber-html-reporter": "^1.18.0"
+  },
+  "cypress-cucumber-preprocessor": {
+    "nonGlobalStepDefinitions": true,
+    "cucumberJson": {
+      "generate": true,
+      "outputFolder": "./reports/cucumber-json",
+      "filePrefix": "",
+      "fileSuffix": ".cucumber"
+    }
+  }
+}
