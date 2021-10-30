@@ -6,5 +6,4 @@ Given(`I open Google page`, () => {
 
 Then(`I see {string} in the title`, (title) => {
   cy.title().should('include', title)
-  cy.wrap(3).should("eq", 2)
 })
