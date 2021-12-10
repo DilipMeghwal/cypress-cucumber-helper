@@ -1,25 +1,27 @@
-// ***********************************************
-// This example commands.js shows you how to
-// create various custom commands and overwrite
-// existing commands.
-//
-// For more comprehensive examples of custom
-// commands please read more here:
-// https://on.cypress.io/custom-commands
-// ***********************************************
-//
-//
-// -- This is a parent command --
-// Cypress.Commands.add('login', (email, password) => { ... })
-//
-//
-// -- This is a child command --
-// Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+
+Cypress.Commands.add('takeScreenshot', (testState) => { 
+    const screenshotsFolder = Cypress.config("screenshotsFolder");
+    cy.screenshot(`${testState.feature.name} -- ${testState.currentScenario.name} -- ${testState.currentStep}`, {
+      capture: 'runner',
+    })
+})
+
+Cypress.Commands.add('readFilesScreenshot', () => { 
+  //requiring path and fs modules
+  const path = require('path');
+  const fs = require('fs');
+  //joining path of directory 
+  const directoryPath = path.join(__dirname, 'screenshots');
+  //passsing directoryPath and callback function
+  fs.readdir(directoryPath, function (err, files) {
+    //handling error
+    if (err) {
+      return console.log('Unable to scan directory: ' + err);
+    }
+    //listing all files using forEach
+    files.forEach(function (file) {
+      // Do whatever you want to do with the file
+      console.log(file);
+    });
+  });
+})

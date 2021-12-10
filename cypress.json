@@ -1,4 +1,14 @@
 {
     "testFiles": "**/*.{feature,features}",
-    "screenshotsFolder" : "cypress/screenshots/"
+    "screenshotsFolder" : "cypress/screenshots/",
+    "chromeWebSecurity": false,
+    "retries" : 0,
+    "defaultCommandTimeout":30000,
+    "pageLoadTimeout":60000,
+    "video" : false,
+    "viewportHeight":600,
+    "viewportWidth":1000,
+    "env": {
+        "incognito" : ""
+    }
 }
