@@ -1,27 +1,6 @@
 
-Cypress.Commands.add('takeScreenshot', (testState) => { 
-    const screenshotsFolder = Cypress.config("screenshotsFolder");
-    cy.screenshot(`${testState.feature.name} -- ${testState.currentScenario.name} -- ${testState.currentStep}`, {
-      capture: 'runner',
-    })
-})
-
-Cypress.Commands.add('readFilesScreenshot', () => { 
-  //requiring path and fs modules
-  const path = require('path');
-  const fs = require('fs');
-  //joining path of directory 
-  const directoryPath = path.join(__dirname, 'screenshots');
-  //passsing directoryPath and callback function
-  fs.readdir(directoryPath, function (err, files) {
-    //handling error
-    if (err) {
-      return console.log('Unable to scan directory: ' + err);
-    }
-    //listing all files using forEach
-    files.forEach(function (file) {
-      // Do whatever you want to do with the file
-      console.log(file);
-    });
-  });
+Cypress.Commands.add('takeScreenshot', (testState) => {
+  cy.screenshot(`${testState.feature.name} -- ${testState.currentScenario.name} -- ${testState.currentStep} -- ${Date.now()}`, {
+    capture: 'runner',
+  })
 })
