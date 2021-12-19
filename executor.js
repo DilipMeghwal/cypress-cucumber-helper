@@ -13,6 +13,9 @@ getCucumberReportMaps();
 addScreenshots();
 generateReport();
 
+/*
+Description : Getting the cucumber report.
+*/
 function getCucumberReportMaps() {
     filenames = fs.readdirSync(cucumberJsonDir);
     const files = fs.readdirSync(cucumberJsonDir).filter((file) => {
@@ -29,6 +32,10 @@ function getCucumberReportMaps() {
     });
 }
 
+
+/*
+Description : Capture the failed and passed screenshot names from directory.
+*/
 function addScreenshots() {
     if (fs.existsSync(screenshotsDir)) {
         //only if screenshots exists
@@ -47,113 +54,237 @@ function addScreenshots() {
                 []
             );
 
-        const screenshots = readdirRecursive(path.resolve(screenshotsDir)).filter(
+        const screenshotsPass = readdirRecursive(path.resolve(screenshotsDir)).filter(
             (file) => {
-                return file.indexOf(".png") > -1;
+                return file.search(/\d+.png/gm) > -1;
             }
         );
 
-        const featuresList = Array.from(
-            new Set(screenshots.map((x) => x.match(/[\w-_.]+.feature/g)[0]))
+        const screenshotsfail = readdirRecursive(path.resolve(screenshotsDir)).filter(
+            (file) => {
+                return file.indexOf("(failed).png") > -1;
+            }
         );
 
-        featuresList.forEach(feature => {
-            console.log("test : " + feature)
-        })
-
-        featuresList.forEach((feature) => {
-            console.log('feature : ' + feature)
-            screenshots.forEach((screenshot) => {
-                if (!screenshot.includes(feature)) {
-                    return
-                }
-                console.log('screenshot : ' + screenshot)
-                // const regex = /(?<=--\ ).+?((?=\ (example\ #\d+))|(?=\ (failed))|(?=.\w{3}))/g;
-                // const [scenarioName] = screenshot.match(regex);
-
-                var filename = screenshot.replace(/^.*[\\\/]/, "");
-                console.log('filename : ' + [filename])
-                const fileNameSplit = filename.split("--")
-                console.log("DilipMeghwal : " + cucumberReportMap[feature][0].name)
-
-                if (filename.includes('example #')) {
-                    const exampleRegEx = /(?<=example #)\d+/g
-                    const stepRegEx = /(?<=\) -- )\d+/g
-                    if (exampleRegEx.exec(fileNameSplit[1].trim())) {
-                        let scenarioIndex = parseInt(fileNameSplit[1].trim().match(exampleRegEx)) - 1
-                        console.log(scenarioIndex)
-                        //if (stepRegEx.exec(fileNameSplit[2].trim())) {
-                        let stepIndex = parseInt(fileNameSplit[2].trim())
-                        console.log(stepIndex)
-                        //}
-                        //console.log("scenario : " + JSON.stringify(cucumberReportMap[feature][0].elements[scenarioIndex].steps[stepIndex]))
-                        let step = cucumberReportMap[feature][0].elements[scenarioIndex].steps[stepIndex]
-                        const data = fs.readFileSync(screenshot);
-                        //console.log('data = ' + path.resolve(screenshot))
-                        if (data) {
-                            //const base64Image = path.resolve(screenshot)//Buffer.from(data, "binary").toString("base64");
-                            const base64Image = Buffer.from(data, "binary").toString("base64");
-                            if (step.embeddings) {
-                                step.embeddings.push({
-                                    data: base64Image,
-                                    mime_type: "image/png",
-                                });
-                            } else {
-                                step.embeddings = [];
-                                step.embeddings.push({
-                                    data: base64Image,
-                                    mime_type: "image/png",
-                                });
-                            }
-                        }
-                    }
-                } else {
-                    let scenarioIndex
-                    cucumberReportMap[feature][0].elements.forEach((sc, index) => {
-                        console.log("name " + sc.name)
-                        if (sc.name == fileNameSplit[1].trim()) {
-                            console.log("index " + index)
-                            scenarioIndex = index
-                        }
-                    });
-                    if (scenarioIndex !== undefined) {
-                        console.log(parseInt(scenarioIndex))
-                        let stepIndex = parseInt(fileNameSplit[2].trim())
-                        console.log(stepIndex)
-                        let step = cucumberReportMap[feature][0].elements[parseInt(scenarioIndex)].steps[stepIndex]
-                        const data = fs.readFileSync(screenshot);
-                        //console.log('data = ' + path.resolve(screenshot))
-                        if (data) {
-                            //const base64Image = path.resolve(screenshot)//Buffer.from(data, "binary").toString("base64");
-                            const base64Image = Buffer.from(data, "binary").toString("base64");
-                            if (step.embeddings) {
-                                step.embeddings.push({
-                                    data: base64Image,
-                                    mime_type: "image/png",
-                                });
-                            } else {
-                                step.embeddings = [];
-                                step.embeddings.push({
-                                    data: base64Image,
-                                    mime_type: "image/png",
-                                });
-                            }
-                        }
-                    }
-
-                }
-
-
-                //Write JSON with screenshot back to report file.
-                fs.writeFileSync(
-                    path.join(cucumberJsonDir, cucumberReportFileMap[feature]),
-                    JSON.stringify(cucumberReportMap[feature], null, jsonIndentLevel)
-                );
-            });
-        });
+        //call to add the screenshots to the json
+        attachPassImages(screenshotsPass)
+        attachFailImages(screenshotsfail)
     }
 }
 
+/*
+Description : Add the passed screenshots to the json file.
+*/
+function attachPassImages(screenshots) {
+    const featuresList = Array.from(
+        new Set(screenshots.map((x) => x.match(/[\w-_.]+.feature/g)[0]))
+    );
+
+    featuresList.forEach(feature => {
+        console.log("test : " + feature)
+    })
+
+    featuresList.forEach((feature) => {
+        console.log('feature : ' + feature)
+        screenshots.forEach((screenshot) => {
+            //If the screenshot does not belongs to the same feature skip it.
+            if (!screenshot.includes(feature)) {
+                return
+            }
+            console.log('screenshot : ' + screenshot)
+
+            var filename = screenshot.replace(/^.*[\\\/]/, "");
+            console.log('filename : ' + [filename])
+            const fileNameSplit = filename.split("--")
+            console.log("DilipMeghwal : " + cucumberReportMap[feature][0].name)
+
+            if (filename.includes('example #')) {
+                const exampleRegEx = /(?<=example #)\d+/g
+                const stepRegEx = /(?<=\) -- )\d+/g
+                if (exampleRegEx.exec(fileNameSplit[1].trim())) {
+                    let scenarioIndex = parseInt(fileNameSplit[1].trim().match(exampleRegEx)) - 1
+                    console.log(scenarioIndex)
+                    //if (stepRegEx.exec(fileNameSplit[2].trim())) {
+                    let stepIndex = parseInt(fileNameSplit[2].trim())
+                    console.log(stepIndex)
+                    //}
+                    //console.log("scenario : " + JSON.stringify(cucumberReportMap[feature][0].elements[scenarioIndex].steps[stepIndex]))
+                    let step = cucumberReportMap[feature][0].elements[scenarioIndex].steps[stepIndex]
+                    const data = fs.readFileSync(screenshot);
+                    console.log('data = ' + path.resolve(screenshot))
+                    if (data) {
+                        const base64Image = path.resolve(screenshot)//Buffer.from(data, "binary").toString("base64");
+                        //const base64Image = Buffer.from(data, "binary").toString("base64");
+                        if (step.embeddings) {
+                            step.embeddings.push({
+                                data: base64Image,
+                                mime_type: "image/png",
+                            });
+                        } else {
+                            step.embeddings = [];
+                            step.embeddings.push({
+                                data: base64Image,
+                                mime_type: "image/png",
+                            });
+                        }
+                    }
+                }
+            } else {
+                let scenarioIndex
+                cucumberReportMap[feature][0].elements.forEach((sc, index) => {
+                    console.log("name " + sc.name)
+                    console.log("file Name2 : " + fileNameSplit[1].replace("(failed).png", "").trim())
+                    if (sc.name == fileNameSplit[1].replace("(failed).png", "").trim()) {
+                        console.log("index " + index)
+                        scenarioIndex = index
+                    }
+                });
+                if (scenarioIndex !== undefined) {
+                    console.log(parseInt(scenarioIndex))
+                    let stepIndex = parseInt(fileNameSplit[2].trim())
+                    console.log(stepIndex)
+                    let step = cucumberReportMap[feature][0].elements[parseInt(scenarioIndex)].steps[stepIndex]
+                    const data = fs.readFileSync(screenshot);
+                    console.log('data = ' + path.resolve(screenshot))
+                    if (data) {
+                        const base64Image = path.resolve(screenshot)//Buffer.from(data, "binary").toString("base64");
+                        //const base64Image = Buffer.from(data, "binary").toString("base64");
+                        if (step.embeddings) {
+                            step.embeddings.push({
+                                data: base64Image,
+                                mime_type: "image/png",
+                            });
+                        } else {
+                            step.embeddings = [];
+                            step.embeddings.push({
+                                data: base64Image,
+                                mime_type: "image/png",
+                            });
+                        }
+                    }
+                }
+
+            }
+            //Write JSON with screenshot back to report file.
+            fs.writeFileSync(
+                path.join(cucumberJsonDir, cucumberReportFileMap[feature]),
+                JSON.stringify(cucumberReportMap[feature], null, jsonIndentLevel)
+            );
+        });
+    });
+}
+
+
+/*
+Description : Add the failed screenshots to the json file.
+*/
+function attachFailImages(screenshots) {
+    const featuresList = Array.from(
+        new Set(screenshots.map((x) => x.match(/[\w-_.]+.feature/g)[0]))
+    );
+
+    featuresList.forEach(feature => {
+        console.log("test : " + feature)
+    })
+
+    featuresList.forEach((feature) => {
+        console.log('feature : ' + feature)
+        screenshots.forEach((screenshot) => {
+            //If the screenshot does not belongs to the same feature skip it.
+            if (!screenshot.includes(feature)) {
+                return
+            }
+            console.log('screenshot : ' + screenshot)
+
+            var filename = screenshot.replace(/^.*[\\\/]/, "");
+            console.log('filename : ' + [filename])
+            const fileNameSplit = filename.split("--")
+            console.log("DilipMeghwal : " + cucumberReportMap[feature][0].name)
+
+            if (filename.includes('example #')) {
+                const exampleRegEx = /(?<=example #)\d+/g
+                const stepRegEx = /(?<=\) -- )\d+/g
+                if (exampleRegEx.exec(fileNameSplit[1].trim())) {
+                    let scenarioIndex = parseInt(fileNameSplit[1].trim().match(exampleRegEx)) - 1
+                    console.log(scenarioIndex)
+                    if (fileNameSplit[1].trim().includes("(failed)")) {
+                        console.log("adding failed one")
+                        cucumberReportMap[feature][0].elements[scenarioIndex].steps.forEach(step => {
+                            if (step.result.status === "failed") {
+                                const data = fs.readFileSync(screenshot);
+                                console.log('data = ' + path.resolve(screenshot))
+                                if (data) {
+                                    const base64Image = path.resolve(screenshot)//Buffer.from(data, "binary").toString("base64");
+                                    //const base64Image = Buffer.from(data, "binary").toString("base64");
+                                    if (step.embeddings) {
+                                        step.embeddings.push({
+                                            data: base64Image,
+                                            mime_type: "image/png",
+                                        });
+                                    } else {
+                                        step.embeddings = [];
+                                        step.embeddings.push({
+                                            data: base64Image,
+                                            mime_type: "image/png",
+                                        });
+                                    }
+                                }
+                            }
+                        })
+                    }
+                }
+            } else {
+                let scenarioIndex
+                cucumberReportMap[feature][0].elements.forEach((sc, index) => {
+                    console.log("name " + sc.name)
+                    console.log("file Name2 : " + fileNameSplit[1].replace("(failed).png", "").trim())
+                    if (sc.name == fileNameSplit[1].replace("(failed).png", "").trim()) {
+                        console.log("index " + index)
+                        scenarioIndex = index
+                    }
+                });
+                if (scenarioIndex !== undefined) {
+                    console.log(parseInt(scenarioIndex))
+                    if (fileNameSplit[1].trim().includes("(failed)")) {
+                        console.log("adding failed one")
+                        cucumberReportMap[feature][0].elements[scenarioIndex].steps.forEach(step => {
+                            if (step.result.status === "failed") {
+                                const data = fs.readFileSync(screenshot);
+                                console.log('data = ' + path.resolve(screenshot))
+                                if (data) {
+                                    const base64Image = path.resolve(screenshot)//Buffer.from(data, "binary").toString("base64");
+                                    //const base64Image = Buffer.from(data, "binary").toString("base64");
+                                    if (step.embeddings) {
+                                        step.embeddings.push({
+                                            data: base64Image,
+                                            mime_type: "image/png",
+                                        });
+                                    } else {
+                                        step.embeddings = [];
+                                        step.embeddings.push({
+                                            data: base64Image,
+                                            mime_type: "image/png",
+                                        });
+                                    }
+                                }
+                            }
+                        })
+                    }
+                }
+
+            }
+            //Write JSON with screenshot back to report file.
+            fs.writeFileSync(
+                path.join(cucumberJsonDir, cucumberReportFileMap[feature]),
+                JSON.stringify(cucumberReportMap[feature], null, jsonIndentLevel)
+            );
+        });
+    });
+}
+
+/*
+Description : Generate the report from json
+*/
 function generateReport() {
     if (!fs.existsSync(cucumberJsonDir)) {
         console.warn("REPORT CANNOT BE CREATED!");

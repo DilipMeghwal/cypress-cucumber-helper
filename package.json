@@ -6,8 +6,7 @@
   "scripts": {
     "clean:reports": "if exist .\\reports rmdir /S/Q .\\reports",
     "pretest": "npm run clean:reports",
-    "test": "cypress run --headed --spec **/*.feature --browser chrome || node cucumber-html-report.js",
-    "posttest": "node cucumber-html-report.js"
+    "test": "cypress run --headed --spec **/*.feature --browser chrome || node cucumber-html-report.js"
   },
   "repository": {
     "type": "git",

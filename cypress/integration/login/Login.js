@@ -8,11 +8,12 @@ Given("I open parabank home page", () => {
 });
 
 When("I enter {string} and {string}", (username, password) => {
+    //cy.visit("https://parabank.parasoft.com/parabank/index.htm")
     cy.wrap(2).should("eq", 2)
     cy.log('username : ' + username)
     cy.log('password : ' + password)
     cy.takeScreenshot(window.testState)
-    cy.wrap(2).should("eq", 2)
+    cy.wrap(2).should("eq", 3)
     cy.log('username : ' + username)
     cy.log('password : ' + password)
     cy.takeScreenshot(window.testState)
