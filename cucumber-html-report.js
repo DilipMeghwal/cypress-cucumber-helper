@@ -54,12 +54,14 @@ function addScreenshots() {
                 []
             );
 
+        //Capture pass screenshot names
         const screenshotsPass = readdirRecursive(path.resolve(screenshotsDir)).filter(
             (file) => {
                 return file.search(/\d+.png/gm) > -1;
             }
         );
 
+        //Capture fail screenshot names
         const screenshotsfail = readdirRecursive(path.resolve(screenshotsDir)).filter(
             (file) => {
                 return file.indexOf("(failed).png") > -1;
@@ -80,40 +82,33 @@ function attachPassImages(screenshots) {
         new Set(screenshots.map((x) => x.match(/[\w-_.]+.feature/g)[0]))
     );
 
-    featuresList.forEach(feature => {
-        console.log("test : " + feature)
-    })
-
     featuresList.forEach((feature) => {
-        console.log('feature : ' + feature)
         screenshots.forEach((screenshot) => {
             //If the screenshot does not belongs to the same feature skip it.
             if (!screenshot.includes(feature)) {
                 return
             }
-            console.log('screenshot : ' + screenshot)
 
+            /*
+             extracting the file name and other part will be removed.
+             src string - screenshot : C:\Workspace\cypress-cucumber-helper\cypress\screenshots\Login.feature\Validate parabank login feature -- Validate user is able to login in (example #8) (failed).png
+             final string -  Validate parabank login feature -- Validate user is able to login in (example #8) (failed).png
+             */
             var filename = screenshot.replace(/^.*[\\\/]/, "");
-            console.log('filename : ' + [filename])
             const fileNameSplit = filename.split("--")
-            console.log("DilipMeghwal : " + cucumberReportMap[feature][0].name)
 
+            //if the feature file contains scenario outlien and examples
             if (filename.includes('example #')) {
                 const exampleRegEx = /(?<=example #)\d+/g
-                const stepRegEx = /(?<=\) -- )\d+/g
                 if (exampleRegEx.exec(fileNameSplit[1].trim())) {
+                    //we will access the scenarios and steps in feature file with indexes
                     let scenarioIndex = parseInt(fileNameSplit[1].trim().match(exampleRegEx)) - 1
-                    console.log(scenarioIndex)
-                    //if (stepRegEx.exec(fileNameSplit[2].trim())) {
                     let stepIndex = parseInt(fileNameSplit[2].trim())
-                    console.log(stepIndex)
-                    //}
-                    //console.log("scenario : " + JSON.stringify(cucumberReportMap[feature][0].elements[scenarioIndex].steps[stepIndex]))
                     let step = cucumberReportMap[feature][0].elements[scenarioIndex].steps[stepIndex]
+                    //read screenshot
                     const data = fs.readFileSync(screenshot);
-                    //console.log('data = ' + path.resolve(screenshot))
                     if (data) {
-                        //const base64Image = path.resolve(screenshot)//Buffer.from(data, "binary").toString("base64");
+                        //convert the image to base64 string
                         const base64Image = Buffer.from(data, "binary").toString("base64");
                         if (step.embeddings) {
                             step.embeddings.push({
@@ -132,22 +127,17 @@ function attachPassImages(screenshots) {
             } else {
                 let scenarioIndex
                 cucumberReportMap[feature][0].elements.forEach((sc, index) => {
-                    console.log("name " + sc.name)
-                    console.log("file Name2 : " + fileNameSplit[1].replace("(failed).png", "").trim())
-                    if (sc.name == fileNameSplit[1].replace("(failed).png", "").trim()) {
-                        console.log("index " + index)
+                    if (sc.name == fileNameSplit[1].trim()) {
                         scenarioIndex = index
                     }
                 });
                 if (scenarioIndex !== undefined) {
-                    console.log(parseInt(scenarioIndex))
                     let stepIndex = parseInt(fileNameSplit[2].trim())
-                    console.log(stepIndex)
                     let step = cucumberReportMap[feature][0].elements[parseInt(scenarioIndex)].steps[stepIndex]
+                    //read screenshot
                     const data = fs.readFileSync(screenshot);
-                    //console.log('data = ' + path.resolve(screenshot))
                     if (data) {
-                        //const base64Image = path.resolve(screenshot)//Buffer.from(data, "binary").toString("base64");
+                        //convert the screenshot to base 64 string
                         const base64Image = Buffer.from(data, "binary").toString("base64");
                         if (step.embeddings) {
                             step.embeddings.push({
@@ -183,38 +173,27 @@ function attachFailImages(screenshots) {
         new Set(screenshots.map((x) => x.match(/[\w-_.]+.feature/g)[0]))
     );
 
-    featuresList.forEach(feature => {
-        console.log("test : " + feature)
-    })
-
     featuresList.forEach((feature) => {
-        console.log('feature : ' + feature)
         screenshots.forEach((screenshot) => {
             //If the screenshot does not belongs to the same feature skip it.
             if (!screenshot.includes(feature)) {
                 return
             }
-            console.log('screenshot : ' + screenshot)
-
             var filename = screenshot.replace(/^.*[\\\/]/, "");
-            console.log('filename : ' + [filename])
             const fileNameSplit = filename.split("--")
-            console.log("DilipMeghwal : " + cucumberReportMap[feature][0].name)
 
+            //scenario outline with examples
             if (filename.includes('example #')) {
                 const exampleRegEx = /(?<=example #)\d+/g
                 const stepRegEx = /(?<=\) -- )\d+/g
                 if (exampleRegEx.exec(fileNameSplit[1].trim())) {
                     let scenarioIndex = parseInt(fileNameSplit[1].trim().match(exampleRegEx)) - 1
-                    console.log(scenarioIndex)
                     if (fileNameSplit[1].trim().includes("(failed)")) {
-                        console.log("adding failed one")
                         cucumberReportMap[feature][0].elements[scenarioIndex].steps.forEach(step => {
                             if (step.result.status === "failed") {
+                                //read failed screenshot
                                 const data = fs.readFileSync(screenshot);
-                                //console.log('data = ' + path.resolve(screenshot))
                                 if (data) {
-                                    //const base64Image = path.resolve(screenshot)//Buffer.from(data, "binary").toString("base64");
                                     const base64Image = Buffer.from(data, "binary").toString("base64");
                                     if (step.embeddings) {
                                         step.embeddings.push({
@@ -236,23 +215,16 @@ function attachFailImages(screenshots) {
             } else {
                 let scenarioIndex
                 cucumberReportMap[feature][0].elements.forEach((sc, index) => {
-                    console.log("name " + sc.name)
-                    console.log("file Name2 : " + fileNameSplit[1].replace("(failed).png", "").trim())
                     if (sc.name == fileNameSplit[1].replace("(failed).png", "").trim()) {
-                        console.log("index " + index)
                         scenarioIndex = index
                     }
                 });
                 if (scenarioIndex !== undefined) {
-                    console.log(parseInt(scenarioIndex))
                     if (fileNameSplit[1].trim().includes("(failed)")) {
-                        console.log("adding failed one")
                         cucumberReportMap[feature][0].elements[scenarioIndex].steps.forEach(step => {
                             if (step.result.status === "failed") {
                                 const data = fs.readFileSync(screenshot);
-                                //console.log('data = ' + path.resolve(screenshot))
                                 if (data) {
-                                    //const base64Image = path.resolve(screenshot)//Buffer.from(data, "binary").toString("base64");
                                     const base64Image = Buffer.from(data, "binary").toString("base64");
                                     if (step.embeddings) {
                                         step.embeddings.push({
@@ -284,6 +256,7 @@ function attachFailImages(screenshots) {
 
 /*
 Description : Generate the report from json
+Note : change the parameters as pe your need
 */
 function generateReport() {
     if (!fs.existsSync(cucumberJsonDir)) {
@@ -294,25 +267,25 @@ function generateReport() {
             reportPath: htmlReportDir,
             displayDuration: true,
             useCDN: true,
-            pageTitle: "Simulacion de Credito Online",
-            reportName: `Simulacion de Credito Online - ${new Date().toLocaleString()}`,
+            pageTitle: "Cypress Helper",
+            reportName: `Cypress Helper - ${new Date().toLocaleString()}`,
             metadata: {
                 app: {
-                    name: "Simulacion de Credito Online",
+                    name: "Cypress Helper",
                     version: "1",
                 },
                 browser: {
-                    name: "electron",
+                    name: "Chrome",
                 },
-                device: "EMULATOR",
+                device: "Desktop",
                 platform: {
-                    name: "linux",
+                    name: "Windows",
                 },
             },
             customData: {
                 title: "Run info",
                 data: [
-                    { label: "Project", value: "Simulacion de Credito" },
+                    { label: "Project", value: "Cypress Helper" },
                     { label: "Release", value: "1" },
                     {
                         label: "Execution Start Time",

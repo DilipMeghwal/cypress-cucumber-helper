@@ -11,11 +11,3 @@ Feature: Validate parabank login feature
       | "demo1"  | "demo1"  |
       | "demo2"  | "demo2"  |
       | "demo"   | "demo"   |
-      | "demo1"  | "demo1"  |
-      | "demo2"  | "demo2"  |
-      | "demo"   | "demo"   |
-      | "demo1"  | "demo1"  |
-      | "demo2"  | "demo2"  |
-      | "demo"   | "demo"   |
-      | "demo1"  | "demo1"  |
-      | "demo2"  | "demo2"  |

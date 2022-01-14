@@ -5,7 +5,7 @@
     "retries" : 0,
     "defaultCommandTimeout":2000,
     "pageLoadTimeout":20000,
-    "video" : false,
+    "video" : true,
     "viewportHeight":600,
     "viewportWidth":1000,
     "env": {
